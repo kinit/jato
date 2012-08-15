@@ -19,6 +19,10 @@ ARCH_CONFIG=arch/$(ARCH)/include/arch/config$(ARCH_POSTFIX).h
 # Make the build silent by default
 V =
 
+LLVM_CFLAGS	:= $(shell llvm-config --cflags | sed -e "s/-DNDEBUG//g")
+LLVM_LIBS	:= $(shell llvm-config --libs)
+LLVM_LDFLAGS	:= $(shell llvm-config --ldflags)
+
 PROGRAM		:= jato
 
 LIB_FILE	:= libjvm.a
@@ -96,6 +100,7 @@ LIB_OBJS += jit/tree-printer.o
 LIB_OBJS += jit/typeconv-bc.o
 LIB_OBJS += jit/vtable.o
 LIB_OBJS += jit/wide-bc.o
+LIB_OBJS += jit/llvm/core.o
 LIB_OBJS += lib/arena.o
 LIB_OBJS += lib/array.o
 LIB_OBJS += lib/bitset.o
@@ -159,7 +164,7 @@ LIB_OBJS += vm/utf8.o
 LIB_OBJS += vm/zalloc.o
 
 CC		?= gcc
-LINK		?= $(CC)
+LINK		?= g++
 MONOBURG	:= ./tools/monoburg/monoburg
 JAVA		?= $(shell pwd)/jato
 JAVAC		?= ecj
@@ -175,6 +180,8 @@ JAVAC_OPTS	+= -encoding utf-8
 JAVAC_OPTS	+= -source 1.6 -target 1.6
 
 DEFAULT_CFLAGS	+= $(ARCH_CFLAGS) -g -rdynamic -std=gnu99 -D_GNU_SOURCE
+
+DEFAULT_CFLAGS	+= $(LLVM_CFLAGS)
 
 ifeq ($(uname_M),x86_64)
 STACK_PROTECTOR = -fno-stack-protector
@@ -248,6 +255,8 @@ endif
 
 DEFAULT_LIBS	= -L. -ljvm -lrt -lpthread -lm -ldl -lz -lbfd -lopcodes -liberty -Lboehmgc -lboehmgc $(ARCH_LIBS)
 
+DEFAULT_LIBS	+= $(LLVM_LIBS)
+
 all: $(PROGRAM)
 .PHONY: all
 .DEFAULT: all
@@ -301,7 +310,7 @@ arch/$(ARCH)/insn-selector$(ARCH_POSTFIX).c: monoburg FORCE
 
 $(PROGRAM): $(LIB_FILE) $(OBJS)
 	$(E) "  LINK    " $@
-	$(Q) $(LINK) $(JATO_CFLAGS) $(DEFAULT_CFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
+	$(Q) $(LINK) $(JATO_CFLAGS) $(DEFAULT_CFLAGS) $(LLVM_LDFLAGS) $(CFLAGS) $(OBJS) -o $(PROGRAM) $(LIBS) $(DEFAULT_LIBS)
 
 $(LIB_FILE): monoburg boehmgc $(VERSION_HEADER) $(ASM_OFFSETS_HEADER) $(CLASSPATH_CONFIG) $(LIB_OBJS)
 	$(E) "  AR      " $@
