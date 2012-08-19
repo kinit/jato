@@ -19,7 +19,7 @@ ARCH_CONFIG=arch/$(ARCH)/include/arch/config$(ARCH_POSTFIX).h
 # Make the build silent by default
 V =
 
-LLVM_CFLAGS	:= $(shell llvm-config --cflags | sed -e "s/-DNDEBUG//g")
+LLVM_CFLAGS	:= $(shell llvm-config --cppflags | sed -e "s/-DNDEBUG//g")
 LLVM_LIBS	:= $(shell llvm-config --libs)
 LLVM_LDFLAGS	:= $(shell llvm-config --ldflags)
 
