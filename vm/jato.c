@@ -131,6 +131,11 @@ static bool opt_interp_only;
 bool opt_llvm_enable;
 
 /*
+ * Be noisy in the LLVM backend:
+ */
+bool opt_llvm_verbose;
+
+/*
  * Enable JIT workarounds for valgrind.
  */
 bool running_on_valgrind;
@@ -742,6 +747,12 @@ static void handle_llvm(void)
 	opt_llvm_enable = true;
 }
 
+static void handle_llvm_verbose(void)
+{
+	opt_llvm_enable		= true;
+	opt_llvm_verbose	= true;
+}
+
 static void regex_compile(regex_t *regex, const char *arg)
 {
 	int err = regcomp(regex, arg, REG_EXTENDED | REG_NOSUB);
@@ -948,6 +959,7 @@ const struct option options[] = {
 	DEFINE_OPTION("Xnoic",			handle_no_ic),
 	DEFINE_OPTION("Xint",			handle_int),
 	DEFINE_OPTION("Xllvm",			handle_llvm),
+	DEFINE_OPTION("Xllvm:verbose",		handle_llvm_verbose),
 
 	DEFINE_OPTION("Xdebug:stack",		handle_debug_stack),
 	DEFINE_OPTION("Xtrace:asm",		handle_trace_asm),
